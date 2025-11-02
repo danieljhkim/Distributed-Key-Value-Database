@@ -4,13 +4,14 @@ A Redis-like distributed key-value store implemented in Java with clustering cap
 
 ## Features
 
-This project provides a lightweight, in-memory database with periodic disk persistence via simple CLI commands.
-Supports a distributed architecture with a coordinator node and multiple data nodes using write-ahead logs (WAL) and a modulo-based sharding strategy, enabling horizontal scalability.
+This project provides a lightweight distributed in-memory database, interfaced with a CLI.
+Supports a distributed architecture with a coordinator node and multiple storage nodes using modulo-based sharding strategy, enabling horizontal scalability.
+The system ensures data durability through periodic disc persistence and offers basic fault tolerance with node failure recovery via WAL.
 
 ### Failure recovery
 
 Failure of any node is managed by the coordinator node, by delegating failed node's work to another healthy node and, once the failed node is back online, it syncs the state via 2 WAL's:
-- **Primary WAL**: Logs from the failed node
+- **Primary WAL**: Logs from the failed storage node
 - **Secondary WAL**: Logs from the coordinator node that were kept while the node was down
 
 ### Client-Server Communication
@@ -25,7 +26,7 @@ Failure of any node is managed by the coordinator node, by delegating failed nod
 
 KvDB follows a distributed architecture with the following components:
 
-- **Coordinator Node**: Manages the cluster topology, routes client requests to appropriate nodes
+- **Coordinator Node**: Manages the cluster topology, routes client requests to appropriate nodes. Performs health checks and delegates tasks in case of node failures.
 - **Storage Nodes**: Store the actual key-value data and handle read/write operations
 - **Client Interface**: Connects to the coordinator for executing commands
 
@@ -47,7 +48,6 @@ KvDB follows a distributed architecture with the following components:
 +-----+-----+    +-----+-----+     +------+------+
 |   Node A  |    |   Node B  |     |   Node C     |
 | - KV store|    | - KV store|     | - KV store   |
-| - Replica |    | - Replica |     | - Replica    |
 +-----------+    +-----------+     +-------------+
 ```
 
@@ -84,7 +84,7 @@ make run_cluster
 
 **Option 1** (recommended): [Use kvcli CLI Go application](./golang/kvcli/README.md)
 ```bash
-make cli
+make build_cli
 
 # connect to the cluster
 kv connect --host localhost --port 7000
@@ -109,7 +109,8 @@ kv connect --host localhost --port 7000
 
 ## Configuration
 
-Storage node configuration is done via `application.properties` file located in the `kv.common/src/main/resources/<node_id>` directory.
+Storage node configuration is done via `application.properties` file located in the `kv.common/src/main/resources/<node_id>` directory for locally running.
+If running the storage nodes remotely, the configuration files should be placed in `kv.server/src/main/resources/<node_id>` directory.
 
 ### File-based Persistence
 

@@ -17,13 +17,35 @@ PID_FILE="$PROJECT_DIR/kv-coordinator.pid"
 
 mkdir -p "$LOG_DIR"
 
-# --- Helpers ---
 is_running() {
-  [[ -f "$PID_FILE" ]] || return 1
-  local pid
-  pid="$(cat "$PID_FILE" 2>/dev/null || true)"
-  [[ -n "$pid" ]] || return 1
-  kill -0 "$pid" 2>/dev/null
+  local port=7000
+
+  # Check if any process is listening on port 7000 (IPv4 or IPv6)
+  if command -v lsof >/dev/null 2>&1; then
+    # lsof available
+    if lsof -iTCP:"$port" -sTCP:LISTEN -P -n >/dev/null 2>&1; then
+      return 0    # running
+    else
+      return 1    # not running
+    fi
+  elif command -v ss >/dev/null 2>&1; then
+    # fallback to ss
+    if ss -ltn "( sport = :$port )" | grep -q LISTEN; then
+      return 0
+    else
+      return 1
+    fi
+  elif command -v netstat >/dev/null 2>&1; then
+    # fallback to netstat (older systems)
+    if netstat -an 2>/dev/null | grep -q "[.:]$port .*LISTEN"; then
+      return 0
+    else
+      return 1
+    fi
+  else
+    echo "⚠️ No suitable tool (lsof/ss/netstat) found to check port status." >&2
+    return 1
+  fi
 }
 
 require_files() {
@@ -40,19 +62,18 @@ require_files() {
 
 start_server() {
   if is_running; then
-    echo "❌ Already running (PID: $(cat "$PID_FILE")). Use '$0 logs' or '$0 stop'."
+    echo "❌ Already running."
     exit 1
   fi
 
   require_files
   echo "🚀 Starting ClusterServer..."
-  # Note: keeping the same launch semantics as your script
   nohup java -jar "$CLUSTER_SERVER_JAR" > "$LOG_FILE" 2>&1 &
   echo $! > "$PID_FILE"
-  sleep 1
+  sleep 10
 
   if is_running; then
-    echo "✅ ClusterServer started (PID: $(cat "$PID_FILE")). Logs → $LOG_FILE"
+    echo "✅ ClusterServer started. Logs → $LOG_FILE"
     echo "   Node servers will be managed by the ClusterServer."
   else
     echo "❌ Failed to start. Check logs → $LOG_FILE"
@@ -60,39 +81,9 @@ start_server() {
   fi
 }
 
-stop_server() {
-  if ! is_running; then
-    echo "⚠️  Not running (no active PID)."
-    [[ -f "$PID_FILE" ]] && rm -f "$PID_FILE"
-    exit 0
-  fi
-
-  local pid
-  pid="$(cat "$PID_FILE")"
-  echo "🛑 Stopping ClusterServer (PID: $pid)..."
-  kill "$pid" 2>/dev/null || true
-
-  # Graceful wait
-  for i in {1..20}; do
-    if ! kill -0 "$pid" 2>/dev/null; then
-      break
-    fi
-    sleep 0.3
-  done
-
-  # Force kill if still alive
-  if kill -0 "$pid" 2>/dev/null; then
-    echo "⚠️  Still running; sending SIGKILL..."
-    kill -9 "$pid" 2>/dev/null || true
-  fi
-
-  rm -f "$PID_FILE"
-  echo "✅ Stopped."
-}
-
 status_server() {
   if is_running; then
-    echo "🟢 ClusterServer running (PID: $(cat "$PID_FILE"))"
+    echo "🟢 ClusterServer running"
     echo "   Log: $LOG_FILE"
   else
     echo "🔴 ClusterServer not running"

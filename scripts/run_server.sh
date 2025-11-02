@@ -18,4 +18,4 @@ fi
 
 # Start server in foreground
 echo "Starting KV Server..."
-java -jar "$CLIENT_JAR"
+java -jar "$CLIENT_JAR" "8082" "grpc" "node2"

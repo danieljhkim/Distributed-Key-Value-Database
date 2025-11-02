@@ -45,9 +45,24 @@ public class ClusterServerApplication {
             ClusterManager clusterManager = new ClusterManager(clusterConfig, basicSharding);
             ClusterServer clusterServer = new ClusterServer(port, clusterManager);
 
+            Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+                try {
+                    LOGGER.severe("Uncaught exception in thread " + t.getName());
+                    LOGGER.log(Level.SEVERE, "Exception details: ", e);}
+                finally {
+                    e.printStackTrace(System.err);  // fallback if logger is broken
+                    System.err.flush();
+                }
+            });
+
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                LOGGER.info("Shutting down ClusterServer...");
-                clusterServer.shutdown();
+                try {
+                    LOGGER.info("Shutting down ClusterServer...");
+                    clusterServer.shutdown();
+                    Thread.sleep(1000); // give time for the logs to flush
+                } catch (Exception e) {
+                    LOGGER.log(Level.SEVERE, "Error during ClusterServer shutdown", e);
+                }
             }));
 
             clusterServer.start();

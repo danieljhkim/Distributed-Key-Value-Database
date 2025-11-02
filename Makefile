@@ -11,7 +11,7 @@ NODE := kv.server
 # Targets
 # -----------------------------------
 
-all: java run_cluster cli
+all: clean java run_cluster run_cli
 
 # -----------------
 # Build Java: uses Maven only
@@ -25,9 +25,16 @@ java:
 # -----------------
 # Build Go CLI
 # -----------------
-cli:
+build_cli:
 	@echo "Building Go CLI..."
 	cd $(GOCLI) && go build -o kv
+
+# -----------------
+# run Go CLI
+# -----------------
+run_cli:
+	@echo "running kv CLI..."
+	kv connect --host localhost --port 7000
 
 # -----------------
 # Clean everything
@@ -41,6 +48,7 @@ clean:
 	rm -f $(NODE)/Node.jar
 	rm -f $(COORD)/kv-coordinator.pid
 	rm -f $(COORD)/logs/*.log
+	./scripts/kill_ports.sh 8081 8082 7000
 
 # -----------------
 # cluster commands
@@ -51,7 +59,7 @@ run_cluster:
 
 stop_cluster:
 	./scripts/cluster-server.sh stop
-	./scripts/kill_ports.sh 8081 8082
+	./scripts/kill_ports.sh 8081 8082 7000
 
 logs_cluster:
 	./scripts/cluster-server.sh logs

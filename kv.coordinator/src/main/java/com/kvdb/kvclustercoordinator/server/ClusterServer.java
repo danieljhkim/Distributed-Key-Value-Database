@@ -44,7 +44,6 @@ public class ClusterServer {
         this.clusterManager.initializeClusterNodes();
         LOGGER.info("ClusterServer started successfully.");
 
-        // Start the health check scheduler
         startHealthCheckScheduler();
 
         try {
@@ -54,6 +53,10 @@ public class ClusterServer {
             acceptConnectionLoop();
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Failed to start server on port " + port, e);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Unexpected error during server startup", e);
+        } finally {
+            LOGGER.info("Shutting down the server...");
             shutdown();
         }
     }
@@ -66,7 +69,7 @@ public class ClusterServer {
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "Error during scheduled health check", e);
             }
-        }, 0, 5, TimeUnit.SECONDS);
+        }, 10, 5, TimeUnit.SECONDS);
     }
 
     public void acceptConnectionLoop() {
@@ -82,22 +85,24 @@ public class ClusterServer {
             } catch (NoHealthyNodesAvailable e) {
                 LOGGER.warning("No healthy nodes available. Waiting for health check to recover nodes.");
                 try {
-                    Thread.sleep(1000); // Small wait before trying again
+                    Thread.sleep(10000); // Small wait before trying again
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
                 }
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "**Unexpected error in connection loop", e);
             }
         }
     }
 
     public void shutdown() {
-        healthCheckScheduler.shutdown();
         try {
             if (!healthCheckScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
                 healthCheckScheduler.shutdownNow();
             }
         } catch (InterruptedException e) {
             healthCheckScheduler.shutdownNow();
+            LOGGER.info("**** Interrupted during health check scheduler shutdown");
             Thread.currentThread().interrupt();
         }
 

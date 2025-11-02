@@ -4,6 +4,8 @@ import com.kvdb.kvcommon.proto.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
+import java.util.concurrent.TimeUnit;
+
 public class GrpcClusterNodeClient implements ClusterNodeClient {
 
     private final ManagedChannel channel;
@@ -48,7 +50,7 @@ public class GrpcClusterNodeClient implements ClusterNodeClient {
     @Override
     public boolean ping() {
         PingRequest request = PingRequest.newBuilder().build();
-        PingResponse response = stub.ping(request);
+        PingResponse response = stub.withDeadlineAfter(5, TimeUnit.SECONDS).ping(request);
         return "pong".equalsIgnoreCase(response.getMessage());
     }
 

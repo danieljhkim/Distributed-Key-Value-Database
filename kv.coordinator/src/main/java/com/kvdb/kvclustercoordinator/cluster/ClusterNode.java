@@ -5,11 +5,13 @@ import lombok.Setter;
 
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Logger;
 
 @Setter
 @Getter
 public class ClusterNode {
 
+    Logger LOGGER = Logger.getLogger(ClusterNode.class.getName());
     private final String id;
     private final ClusterNodeClient client;
     private final String host;
@@ -27,7 +29,7 @@ public class ClusterNode {
         this.port = port;
         this.isGrpc = useGrpc;
         this.client = useGrpc ? new GrpcClusterNodeClient(host, port) : new HttpClusterNodeClient(host, port);
-        initWALManager("./wal/" + id + ".log");
+        initWALManager("data/" + id + ".wal");
     }
 
     public ClusterNode(String id, String host, int port) {
@@ -65,7 +67,12 @@ public class ClusterNode {
     }
 
     public boolean isRunning() {
-        isRunning = this.client.ping();
+        try {
+            isRunning = this.client.ping();
+        } catch (Exception e) {
+            LOGGER.severe("Ping to node " + id + " failed: " + e.getMessage());
+            isRunning = false;
+        }
         return isRunning;
     }
 

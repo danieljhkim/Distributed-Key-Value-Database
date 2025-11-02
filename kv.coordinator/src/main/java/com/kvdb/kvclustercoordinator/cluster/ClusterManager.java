@@ -17,7 +17,6 @@ public class ClusterManager {
     Logger LOGGER = Logger.getLogger(ClusterManager.class.getName());
     private final ClusterConfig clusterConfig;
     private final ShardingStrategy shardingStrategy;
-    private final WALManager walManager = new WALManager("delegation_wal.log");
     private final List<ClusterNode> clusterNodes = new ArrayList<>();
     private final List<String> unhealthyNodeIds = new ArrayList<>();
     private final Map<String, ClusterNode> delegationMap = new HashMap<>(); // this maps down nodes to their delegate nodes
@@ -34,7 +33,7 @@ public class ClusterManager {
         this.clusterNodes.clear();
         try {
             for (ClusterNode node : clusterConfig.getNodes()) {
-                startClusterNodes(node);
+                startClusterNodesLocal(node);
                 clusterNodes.add(node);
             }
             LOGGER.info("Initialized " + clusterNodes.size() + " cluster nodes from configuration");
@@ -114,19 +113,20 @@ public class ClusterManager {
         }
     }
 
-    private void startClusterNodes(ClusterNode node) {
+    private void startClusterNodesLocal(ClusterNode node) { // only for local nodes
+        // TODO: implement remote start node
         String coordinatorDir = System.getProperty("user.dir");
         String serverJarPath = coordinatorDir + "/kv.server/target/kv.server-1.0-SNAPSHOT.jar"; //TODO:: Adjust path dynamically
         try {
-            String command = String.format(
-                    "java -jar %s %d %s %s",
-                    serverJarPath,
-                    node.getPort(),
+            String logFilePath = coordinatorDir + "/logs/" + node.getId() + ".log";
+            ProcessBuilder processBuilder = new ProcessBuilder(
+                    "java", "-jar", serverJarPath,
+                    String.valueOf(node.getPort()),
                     node.isGrpc ? "grpc" : "http",
                     node.getId()
             );
-            ProcessBuilder processBuilder = new ProcessBuilder(command.split(" "));
-            processBuilder.inheritIO();
+            processBuilder.redirectOutput(new java.io.File(logFilePath));
+            processBuilder.redirectErrorStream(true); // Redirect error stream to the same log file
             processBuilder.start();
             LOGGER.info("Started node: " + node.getId() + " on port: " + node.getPort());
         } catch (Exception e) {
