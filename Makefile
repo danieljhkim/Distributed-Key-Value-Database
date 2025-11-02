@@ -39,6 +39,8 @@ clean:
 	rm -f $(GOCLI)/kv
 	rm -f $(COORD)/Coordinator.jar
 	rm -f $(NODE)/Node.jar
+	rm -f $(COORD)/kv-coordinator.pid
+	rm -f $(COORD)/logs/*.log
 
 # -----------------
 # cluster commands
@@ -48,13 +50,13 @@ run_cluster:
 	./scripts/cluster-server.sh start
 
 stop_cluster:
-    ./scripts/cluster-server.sh stop
-    ./scripts/kill_ports.sh 8081 8082
+	./scripts/cluster-server.sh stop
+	./scripts/kill_ports.sh 8081 8082
 
 logs_cluster:
-    ./scripts/cluster-server.sh logs
+	./scripts/cluster-server.sh logs
 
 status_cluster:
-    ./scripts/cluster-server.sh status
+	./scripts/cluster-server.sh status
 
 .PHONY: all java cli clean run_cluster
