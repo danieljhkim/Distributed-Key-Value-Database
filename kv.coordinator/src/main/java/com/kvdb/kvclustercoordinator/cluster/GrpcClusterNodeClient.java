@@ -55,7 +55,11 @@ public class GrpcClusterNodeClient implements ClusterNodeClient {
     }
 
     @Override
-    public void shutdown() {
+    public String shutdown() {
+        ShutdownRequest request = ShutdownRequest.newBuilder().build();
+        ShutdownResponse response = stub.shutdown(request);
         channel.shutdown();
+        return response.getMessage();
+
     }
 }

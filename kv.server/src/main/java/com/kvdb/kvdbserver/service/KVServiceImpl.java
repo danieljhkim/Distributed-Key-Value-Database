@@ -59,4 +59,15 @@ public class KVServiceImpl extends KVServiceGrpc.KVServiceImplBase {
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void shutdown(ShutdownRequest request, StreamObserver<ShutdownResponse> responseObserver) {
+        ShutdownResponse response = ShutdownResponse.newBuilder()
+                .setMessage("goodbye")
+                .build();
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+        System.exit(0);
+    }
 }

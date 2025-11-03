@@ -80,9 +80,7 @@ public class ClusterNode {
         if (client != null) {
             client.shutdown();
         }
-        if (walManager != null) {
-            walManager.clear();
-        }
+        clearWal();
     }
 
     public void logWal(String operation, String key, String value) {

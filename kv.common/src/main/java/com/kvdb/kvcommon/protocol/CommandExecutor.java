@@ -37,8 +37,9 @@ public interface CommandExecutor {
     /**
      * Shutdown the executor
      */
-    default void shutdown() {
+    default String shutdown() {
         // Default implementation does nothing
+        return "Shutdown completed.";
     }
     
     /**

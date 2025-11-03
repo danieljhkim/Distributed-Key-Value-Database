@@ -5,7 +5,6 @@ import com.kvdb.kvclustercoordinator.sharding.ShardingStrategy;
 import com.kvdb.kvcommon.constants.AppStatus;
 import com.kvdb.kvcommon.exception.CodeRedException;
 import com.kvdb.kvcommon.exception.NoHealthyNodesAvailable;
-import com.kvdb.kvcommon.persistence.WALManager;
 
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
@@ -47,13 +46,23 @@ public class ClusterManager {
     }
 
     public ClusterNode getShardedNode(String[] command) throws IllegalArgumentException, IllegalStateException, NoHealthyNodesAvailable {
-        if (!initialized) {
+        if (!initialized || clusterNodes.isEmpty()) {
             LOGGER.warning("Cluster nodes not initialized");
-            throw new IllegalStateException("Cluster nodes not initialized");
+            throw new NoHealthyNodesAvailable("No healthy nodes available");
         }
         if (command.length < 3) {
-            LOGGER.warning("Invalid command format, expected at least 3 parts");
-            throw new IllegalArgumentException("Invalid command format, expected at least 3 parts");
+            return clusterNodes.getFirst();
+        }
+        if (command[1].equalsIgnoreCase("SHUTDOWN")) {
+            String nodeId = command[2];
+            for (ClusterNode node : clusterNodes) {
+                if (node.getId().equals(nodeId)) {
+                    clusterNodes.remove(node);
+                    return node;
+                }
+            }
+            LOGGER.warning("Node with ID " + nodeId + " not found for shutdown");
+            throw new IllegalArgumentException("Node with ID " + nodeId + " not found for shutdown");
         }
         String key = command[2];
         String operation = command[1].toUpperCase();

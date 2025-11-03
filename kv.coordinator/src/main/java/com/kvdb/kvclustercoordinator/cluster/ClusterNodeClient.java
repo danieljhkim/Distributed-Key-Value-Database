@@ -5,5 +5,5 @@ public interface ClusterNodeClient {
     boolean sendDelete(String key);
     String sendGet(String key);
     boolean ping();
-    void shutdown();
+    String shutdown();
 }

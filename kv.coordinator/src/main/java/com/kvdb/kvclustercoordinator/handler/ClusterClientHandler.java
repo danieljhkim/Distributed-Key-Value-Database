@@ -25,6 +25,7 @@ public class ClusterClientHandler implements Runnable {
     private final String clientAddress;
     private final KVCommandParser commandParser;
     private final ClusterManager clusterManager;
+    private final ClusterCommandExecutor executor = new ClusterCommandExecutor();
 
 
     public ClusterClientHandler(Socket socket, ClusterManager clusterManager) {
@@ -54,7 +55,7 @@ public class ClusterClientHandler implements Runnable {
         }
     }
 
-    private void processClientCommands(BufferedReader reader, BufferedWriter writer) throws IOException, NoHealthyNodesAvailable {
+    private void processClientCommands(BufferedReader reader, BufferedWriter writer) throws IOException {
         String command;
         while ((command = reader.readLine()) != null) {
             try {
@@ -66,7 +67,6 @@ public class ClusterClientHandler implements Runnable {
 
                 parts[0] = parts[0].toUpperCase();
                 LOGGER.fine("Command received: " + command);
-
                 if (parts[0].equals(KV_COMMAND)) {
                     ClusterNode node = clusterManager.getShardedNode(parts);
                     if (node == null) {
@@ -74,20 +74,22 @@ public class ClusterClientHandler implements Runnable {
                         continue;
                     }
                     LOGGER.info("Routing command to node: " + node.getId());
-                    ClusterCommandExecutor executor = new ClusterCommandExecutor(node.getClient());
+                    executor.setClient(node.getClient());
                     String response = commandParser.executeCommand(Arrays.copyOfRange(parts, 1, parts.length), executor);
                     writer.write(response + "\n");
                     writer.flush();
-                    executor.shutdown();
                 } else {
                     sendErrorResponse(writer, "commands not supported");
                 }
+            } catch (IllegalArgumentException e) {
+                LOGGER.log(Level.WARNING, "Invalid command", e);
+                sendErrorResponse(writer, "Invalid command: " + e.getMessage());
             } catch (NoHealthyNodesAvailable e) {
                 LOGGER.log(Level.WARNING, "No healthy nodes available", e);
                 sendErrorResponse(writer, "No healthy nodes available");
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "Error processing command", e);
-                sendErrorResponse(writer, "Internal server error");
+                sendErrorResponse(writer, "Internal server error: " + e.getMessage());
             }
         }
     }

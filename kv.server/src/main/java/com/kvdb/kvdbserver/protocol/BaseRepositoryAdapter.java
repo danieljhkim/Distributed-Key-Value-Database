@@ -40,8 +40,9 @@ public class BaseRepositoryAdapter implements CommandExecutor {
     }
     
     @Override
-    public void shutdown() {
+    public String shutdown() {
         repository.shutdown();
+        return "Repository shutdown completed.";
     }
     
     @Override

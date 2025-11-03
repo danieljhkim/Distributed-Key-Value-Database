@@ -11,25 +11,20 @@ public class KVCommandParser {
         SET [key] [value] - Store a key-value pair
         GET [key] - Retrieve value for a given key
         DEL [key] - Remove a key-value pair
-        EXISTS [key] - Check if a key exists (returns 1 if exists, 0 if not)
-        SIZE - Return the number of key-value pairs stored
-        CLEAR - Remove all entries
-        ALL - Return all key-value pairs
         PING - Check connection
-        SHUTDOWN/QUIT/TERMINATE - Close the database connection
+        SHUTDOWN [node_id]- Shut down the node
         HELP/INFO - Display this help message""";
 
 
     public String executeCommand(String[] parts, CommandExecutor executor) {
+        if (parts.length == 0) return "ERR: Empty command";
         String cmd = parts[0].trim().toUpperCase();
         return switch (cmd) {
-            case "HELP", "INFO" -> HELP_TEXT;
+            case "HELP", "INFO" -> getHelpText();
             case "SET" -> handleSet(parts, executor);
             case "GET" -> handleGet(parts, executor);
             case "DEL" -> handleDelete(parts, executor);
-            case "EXISTS" -> handleExists(parts, executor);
-            case "DROP" -> handleDrop(executor);
-            case "SHUTDOWN", "QUIT", "TERMINATE" -> handleShutdown(executor);
+            case "SHUTDOWN" -> handleShutdown(parts, executor);
             case "PING" -> handlePing();
             default -> "ERR: Unknown command";
         };
@@ -55,14 +50,9 @@ public class KVCommandParser {
         return executor.exists(parts[1]) ? "1" : "0";
     }
 
-    private String handleDrop(CommandExecutor executor) {
-        executor.truncate();
-        return "OK";
-    }
-
-    private String handleShutdown(CommandExecutor executor) {
-        executor.shutdown();
-        return "OK";
+    private String handleShutdown(String[] parts, CommandExecutor executor) {
+        if (parts.length != 2) return "ERR: Usage: SHUTDOWN node_id";
+        return executor.shutdown();
     }
 
     private String handlePing() {
