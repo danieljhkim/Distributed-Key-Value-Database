@@ -3,7 +3,6 @@ package com.kvdb.kvdbserver.handler;
 
 import com.kvdb.kvcommon.protocol.CommandParser;
 import com.kvdb.kvdbserver.protocol.KVCommandParser;
-import com.kvdb.kvdbserver.protocol.SQLCommandParser;
 
 import java.io.*;
 import java.net.Socket;
@@ -18,7 +17,6 @@ public class ClientHandler implements Runnable {
     private final Socket clientSocket;
     private final String clientAddress;
     CommandParser kvCommandParser = new KVCommandParser();
-    CommandParser sqlCommandParser = new SQLCommandParser();
 
     public ClientHandler(Socket socket) {
         this.clientSocket = socket;
@@ -54,13 +52,8 @@ public class ClientHandler implements Runnable {
                 }
                 parts[0] = parts[0].toUpperCase();
                 LOGGER.fine("Command received: " + command);
-                if (parts[0].equals(SQL_COMMAND)) {
-                    String sqlResponse = sqlCommandParser.process(parts);
-                    writer.write(sqlResponse + "\n");
-                } else {
-                    String response = kvCommandParser.process(parts);
-                    writer.write(response + "\n");
-                }
+                String response = kvCommandParser.process(parts, null);
+                writer.write(response + "\n");
                 writer.flush();
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "Error processing command", e);

@@ -31,22 +31,26 @@ public interface CommandExecutor {
      * Remove all entries
      */
     default int truncate() {
-        return 0; // Default implementation
+        throw new UnsupportedOperationException("truncate() is not supported by this executor");
     }
     
     /**
      * Shutdown the executor
      */
     default String shutdown() {
-        // Default implementation does nothing
-        return "Shutdown completed.";
+        throw new UnsupportedOperationException("shutdown() is not supported by this executor");
     }
     
     /**
      * Check if the executor is healthy
      */
     default boolean isHealthy() {
-        return true;
+        try {
+            get(null);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
     
     /**

@@ -35,49 +35,58 @@ public class KVCommandParser extends CommandParser {
     }
 
     @Override
-    public String executeCommand(String[] parts) {
+    public String executeCommand(String[] parts, CommandExecutor executor) {
+        if (executor == null) {
+            executor = this.executor;
+        }
         String cmd = parts[0].trim().toUpperCase();
         return switch (cmd) {
-            case "HELP", "INFO" -> HELP_TEXT;
-            case "SET" -> handleSet(parts);
-            case "GET" -> handleGet(parts);
-            case "DEL" -> handleDelete(parts);
-            case "EXISTS" -> handleExists(parts);
-            case "DROP" -> handleDrop();
-            case "SHUTDOWN", "QUIT", "TERMINATE" -> handleShutdown();
+            case "HELP", "INFO" -> getHelpText();
+            case "SET" -> handleSet(parts, executor);
+            case "GET" -> handleGet(parts, executor);
+            case "DEL" -> handleDelete(parts, executor);
+            case "SHUTDOWN" -> handleShutdown(executor);
             case "PING" -> handlePing();
             default -> "ERR: Unknown command";
         };
     }
 
-    private String handleSet(String[] parts) {
-        if (parts.length != 3) return "ERR: Usage: SET key value";
-        return String.valueOf(executor.put(parts[1], parts[2]));
+    private String handleSet(String[] parts, CommandExecutor executor) {
+        if (parts.length != 3) return formatError("Usage: SET key value");
+        return formatOk(String.valueOf(executor.put(parts[1], parts[2])));
     }
 
-    private String handleGet(String[] parts) {
-        if (parts.length != 2) return "ERR: Usage: GET key";
-        return executor.get(parts[1]);
+    private String handleGet(String[] parts, CommandExecutor executor) {
+        if (parts.length != 2) return formatError("Usage: GET key");
+        String value = executor.get(parts[1]);
+        return value != null ? value : NIL_RESPONSE;
     }
 
-    private String handleDelete(String[] parts) {
-        if (parts.length != 2) return "ERR: Usage: DEL key";
-        return String.valueOf(executor.delete(parts[1]));
+    private String handleDelete(String[] parts, CommandExecutor executor) {
+        if (parts.length != 2) return formatError("Usage: DEL key");
+        return formatOk(String.valueOf(executor.delete(parts[1])));
     }
 
-    private String handleExists(String[] parts) {
-        if (parts.length != 2) return "ERR: Usage: EXISTS key";
+    private String handleExists(String[] parts, CommandExecutor executor) {
+        if (parts.length != 2) return formatError("Usage: EXISTS key");
         return executor.exists(parts[1]) ? "1" : "0";
     }
 
-    private String handleDrop() {
-        executor.truncate();
-        return "OK";
+    private String handleDrop(CommandExecutor executor) {
+        try {
+            int count = executor.truncate();
+            return count > 0 ? OK_RESPONSE : formatError("No keys to delete");
+        } catch (UnsupportedOperationException e) {
+            return formatError("DROP operation not supported");
+        }
     }
 
-    private String handleShutdown() {
-        executor.shutdown();
-        return "OK";
+    private String handleShutdown(CommandExecutor executor) {
+        try {
+            return formatOk(executor.shutdown());
+        } catch (UnsupportedOperationException e) {
+            return formatError("SHUTDOWN operation not supported");
+        }
     }
 
     private String handlePing() {

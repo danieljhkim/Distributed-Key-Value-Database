@@ -2,8 +2,9 @@ package com.kvdb.kvclustercoordinator.protocol;
 
 
 import com.kvdb.kvcommon.protocol.CommandExecutor;
+import com.kvdb.kvcommon.protocol.CommandParser;
 
-public class KVCommandParser {
+public class KVCommandParser extends CommandParser {
 
     private static final String HELP_TEXT =
             """
@@ -16,8 +17,9 @@ public class KVCommandParser {
         HELP/INFO - Display this help message""";
 
 
+    @Override
     public String executeCommand(String[] parts, CommandExecutor executor) {
-        if (parts.length == 0) return "ERR: Empty command";
+        if (parts.length == 0) return formatError("Empty command");
         String cmd = parts[0].trim().toUpperCase();
         return switch (cmd) {
             case "HELP", "INFO" -> getHelpText();
@@ -26,33 +28,38 @@ public class KVCommandParser {
             case "DEL" -> handleDelete(parts, executor);
             case "SHUTDOWN" -> handleShutdown(parts, executor);
             case "PING" -> handlePing();
-            default -> "ERR: Unknown command";
+            default -> formatError("Unknown command");
         };
     }
 
     private String handleSet(String[] parts, CommandExecutor executor) {
-        if (parts.length != 3) return "ERR: Usage: SET key value";
+        if (parts.length != 3) return formatError("Usage: SET key value");
         return String.valueOf(executor.put(parts[1], parts[2]));
     }
 
     private String handleGet(String[] parts, CommandExecutor executor) {
-        if (parts.length != 2) return "ERR: Usage: GET key";
-        return executor.get(parts[1]);
+        if (parts.length != 2) return formatError("Usage: GET key");
+        String value = executor.get(parts[1]);
+        return value != null ? value : NIL_RESPONSE;
     }
 
     private String handleDelete(String[] parts, CommandExecutor executor) {
-        if (parts.length != 2) return "ERR: Usage: DEL key";
+        if (parts.length != 2) return formatError("Usage: DEL key");
         return String.valueOf(executor.delete(parts[1]));
     }
 
     private String handleExists(String[] parts, CommandExecutor executor) {
-        if (parts.length != 2) return "ERR: Usage: EXISTS key";
-        return executor.exists(parts[1]) ? "1" : "0";
+        if (parts.length != 2) return formatError("Usage: EXISTS key");
+        return executor.exists(parts[1]) ? "1" : NIL_RESPONSE;
     }
 
     private String handleShutdown(String[] parts, CommandExecutor executor) {
-        if (parts.length != 2) return "ERR: Usage: SHUTDOWN node_id";
-        return executor.shutdown();
+        if (parts.length != 2) return formatError("Usage: SHUTDOWN node_id");
+        try {
+            return executor.shutdown();
+        } catch (UnsupportedOperationException e) {
+            return formatError("SHUTDOWN operation not supported");
+        }
     }
 
     private String handlePing() {
