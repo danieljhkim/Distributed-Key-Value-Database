@@ -2,6 +2,7 @@ package com.kvdb.kvclustercoordinator.server;
 
 import com.kvdb.kvclustercoordinator.cluster.ClusterManager;
 import com.kvdb.kvclustercoordinator.handler.ClusterClientHandler;
+import com.kvdb.kvcommon.config.SystemConfig;
 import com.kvdb.kvcommon.exception.NoHealthyNodesAvailable;
 
 import java.io.IOException;
@@ -19,19 +20,21 @@ import java.util.logging.Logger;
  * It initializes cluster nodes from a configuration file and accepts client connections to handle requests.
  */
 public class ClusterServer {
-
     private static final Logger LOGGER = Logger.getLogger(ClusterServer.class.getName());
+    private static final SystemConfig CONFIG = SystemConfig.getInstance();
+
+    private final int healthCheckInterval = Integer.parseInt(CONFIG.getProperty("kvdb.server.healthCheckInterval", "5"));
+    private final int port;
     private final ClusterManager clusterManager;
-    private int port;
+    private final ExecutorService threadPool;
+    private final ScheduledExecutorService healthCheckScheduler = Executors.newSingleThreadScheduledExecutor();
     private ServerSocket serverSocket;
     private boolean running = false;
-    private final int threadPoolSize = 10;
-    private ExecutorService threadPool;
-    private final ScheduledExecutorService healthCheckScheduler = Executors.newSingleThreadScheduledExecutor();
 
     public ClusterServer(int port, ClusterManager clusterManager) {
         this.port = port;
         this.clusterManager = clusterManager;
+        int threadPoolSize = Integer.parseInt(CONFIG.getProperty("kvdb.server.threadPoolSize", "10"));
         this.threadPool = Executors.newFixedThreadPool(threadPoolSize);
     }
 
@@ -69,7 +72,7 @@ public class ClusterServer {
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, "Error during scheduled health check", e);
             }
-        }, 10, 5, TimeUnit.SECONDS);
+        }, 10, healthCheckInterval, TimeUnit.SECONDS);
     }
 
     public void acceptConnectionLoop() {

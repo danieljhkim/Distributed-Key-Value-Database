@@ -1,5 +1,7 @@
 # KvDB - Distributed Key-Value Database
 
+[![Build and Test](https://github.com/danieljhkim/Distributed-Key-Value-Database/actions/workflows/build.yml/badge.svg)](https://github.com/danieljhkim/Distributed-Key-Value-Database/actions/workflows/build.yml)
+
 A Redis-like distributed key-value store implemented in Java with clustering capabilities.
 
 ## Features

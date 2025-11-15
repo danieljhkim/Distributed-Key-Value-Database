@@ -5,6 +5,7 @@ import com.kvdb.kvclustercoordinator.config.ClusterConfig;
 import com.kvdb.kvclustercoordinator.server.ClusterServer;
 import com.kvdb.kvclustercoordinator.sharding.BasicShardingStrategy;
 import com.kvdb.kvclustercoordinator.sharding.ShardingStrategy;
+import com.kvdb.kvcommon.config.SystemConfig;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,12 +19,12 @@ import java.util.logging.Logger;
 public class ClusterServerApplication {
 
     private static final Logger LOGGER = Logger.getLogger(ClusterServerApplication.class.getName());
-    private static final int DEFAULT_PORT = 7000;
-    private static final String DEFAULT_CONFIG_PATH =  "cluster-config.yaml";
+    private static final SystemConfig CONFIG = SystemConfig.getInstance("coordinator");
+    private static final String DEFAULT_CONFIG_PATH = "cluster-config.yaml";
 
     public static void main(String[] args) {
         // System.setProperty("io.grpc.internal.DnsNameResolverProvider.enable_jndi", "false");
-        int port = DEFAULT_PORT;
+        int port = Integer.parseInt(CONFIG.getProperty("kvdb.server.port", "7000"));
         String configFilePath = DEFAULT_CONFIG_PATH;
 
         // Parse command-line arguments for port and config file path
@@ -31,7 +32,7 @@ public class ClusterServerApplication {
             try {
                 port = Integer.parseInt(args[0]);
             } catch (NumberFormatException e) {
-                LOGGER.warning("Invalid port provided, using default port: " + DEFAULT_PORT);
+                LOGGER.warning("Invalid port provided, using default port: " + port);
             }
         }
         if (args.length > 1) {
