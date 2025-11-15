@@ -34,7 +34,7 @@ build_cli:
 # -----------------
 run_cli:
 	@echo "running kv CLI..."
-	kv connect --host localhost --port 7000
+	./$(GOCLI)/kv connect --host localhost --port 7000
 
 # -----------------
 # Clean everything
@@ -66,4 +66,4 @@ logs_cluster:
 status_cluster:
 	./scripts/cluster-server.sh status
 
-.PHONY: all java cli clean run_cluster stop_cluster
+.PHONY: all java build_cli run_cli clean run_cluster stop_cluster logs_cluster status_cluster

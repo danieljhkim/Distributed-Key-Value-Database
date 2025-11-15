@@ -1,5 +1,7 @@
 # KvDB - Distributed Key-Value Database
 
+[![Build and Test](https://github.com/danieljhkim/Distributed-Key-Value-Database/actions/workflows/build.yml/badge.svg)](https://github.com/danieljhkim/Distributed-Key-Value-Database/actions/workflows/build.yml)
+
 A Redis-like distributed key-value store implemented in Java with clustering capabilities.
 
 ## Features
@@ -63,8 +65,9 @@ KvDB follows a distributed architecture with the following components:
 
 ### Prerequisites
 
-- Java 11 or higher
-- Maven
+- Java 21 or higher
+- Maven 3.6+
+- Go 1.21+ (for CLI client)
 
 ### Starting the Cluster
 
@@ -94,16 +97,57 @@ kv connect --host localhost --port 7000
 
 #### In-Memory Store Operations
 
-- `KV SET key value` - Set key to hold string value
-- `KV GET key` - Get the value of key
-- `KV DEL key` - Delete one or more keys
+- `SET key value` - Set key to hold string value
+- `GET key` - Get the value of key (returns `(nil)` if key doesn't exist)
+- `DEL key` - Delete one or more keys
+- `EXISTS key` - Check if a key exists (returns 1 if exists, 0 if not)
 
+#### SQL-like Operations
+
+- `SQL INIT [table_name]` - Initialize a new table
+- `SQL USE [table_name]` - Switch to an existing table
+- `SQL GET [key]` - Retrieve value (returns `(nil)` if key doesn't exist)
+- `SQL SET [key] [value]` - Store a key-value pair
+- `SQL DEL [key]` - Remove a key-value pair
+- `SQL CLEAR` - Remove all entries from the current table
+- `SQL PING` - Check connection to database
 
 #### Other Commands
 
 - `PING` - Test connection
 - `HELP` - Show help message
 - `EXIT` - Exit the client
+
+#### Response Conventions
+
+- Missing keys return `(nil)` for GET operations
+- Successful operations return `OK` or `true`
+- Errors are prefixed with `ERR:`
+
+---
+
+## Testing
+
+The project includes comprehensive unit tests for the command parsing and execution layer.
+
+### Running Tests
+
+```bash
+# Run all tests
+mvn test
+
+# Run tests for a specific module
+mvn test -pl kv.server
+mvn test -pl kv.coordinator
+```
+
+### Test Coverage
+
+- **KVCommandParser**: 21 tests covering command parsing, validation, and response formatting
+- **SQLCommandParser**: 25 tests covering SQL-like commands, initialization requirements, and error handling
+- **Coordinator KVCommandParser**: 15 tests for distributed command routing
+
+All tests use lightweight fake executors to avoid external dependencies and ensure fast, reliable test execution.
 
 --- 
 
