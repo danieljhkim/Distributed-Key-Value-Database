@@ -14,12 +14,10 @@ import (
 )
 
 var (
-	cfgFile string
-	kvClient *client.Client
-	host     string
-	port     int
-	
-	// Interactive mode flag
+	cfgFile     string
+	kvClient    *client.Client
+	host        string
+	port        int
 	interactive bool
 )
 
@@ -36,7 +34,6 @@ This client connects to a KV server and allows you to send commands.`,
 				fmt.Println("Failed to connect to server. Exiting.")
 				os.Exit(1)
 			}
-			
 			// Setup cleanup on exit
 			c := make(chan os.Signal, 1)
 			signal.Notify(c, os.Interrupt, syscall.SIGTERM)
@@ -64,14 +61,8 @@ func Execute() error {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./config.yaml)")
-	// rootCmd.PersistentFlags().StringVar(&host, "host", "", "server host")
-	// rootCmd.PersistentFlags().IntVar(&port, "port", 0, "server port")
-	
-	// Add interactive mode flag
 	rootCmd.Flags().BoolVarP(&interactive, "interactive", "i", false, "start in interactive mode")
-
 }
 
 func initConfig() {
@@ -87,7 +78,6 @@ func initConfig() {
 	if port == 0 {
 		port = cfg.Server.Port
 	}
-	
 	// Bind flags to viper for use in other commands
 	viper.BindPFlag("server.host", rootCmd.PersistentFlags().Lookup("host"))
 	viper.BindPFlag("server.port", rootCmd.PersistentFlags().Lookup("port"))

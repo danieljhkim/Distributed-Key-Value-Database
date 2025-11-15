@@ -12,29 +12,28 @@ import (
 )
 
 const (
-	Prompt = "> "
-	EndMarker = "END_MARKER"
+	Prompt         = "> "
+	EndMarker      = "END_MARKER"
 	WelcomeMessage = "Welcome to the KV CLI! Type 'HELP' for available commands."
-	LineSeparator = "----------------------------------------"
+	LineSeparator  = "----------------------------------------"
 
 	KVHelpMessage = `KV-Store Available commands:
 0. KV CONNECT --host <host> --port <port>  - Connect to a KV server.
 1. KV SET key value - Store a key-value pair.
 2. KV GET key - Retrieve the value for a given key.
 3. KV DEL key - Remove a key-value pair.
-4. KV DROP - Remove all entries.
-5. KV PING - Check connection.
-6. KV QUIT/EXIT - Close the connection.
-7. KV HELP - Display this help message.`
+4. KV PING - Check connection.
+5. KV EXIT - Close the connection.
+6. KV HELP - Display this help message.`
 )
 
 type Client struct {
-	host      string
-	port      int
-	conn      net.Conn
-	reader    *bufio.Reader
-	writer    *bufio.Writer
-	connected bool
+	host             string
+	port             int
+	conn             net.Conn
+	reader           *bufio.Reader
+	writer           *bufio.Writer
+	connected        bool
 	welcomeDisplayed bool
 }
 
@@ -61,13 +60,6 @@ func (c *Client) Connect(host string, port int) bool {
 	c.reader = bufio.NewReader(conn)
 	c.writer = bufio.NewWriter(conn)
 	c.connected = true
-
-	// fmt.Println(WelcomeMessage)
-	// fmt.Printf("Connected to KV Database on %s:%d\n", host, port)
-	// fmt.Println(LineSeparator)
-	// fmt.Println(KVHelpMessage)
-	// fmt.Println(LineSeparator)
-
 	return true
 }
 
@@ -78,7 +70,6 @@ func (c *Client) RunCLI() {
 	}
 
 	scanner := bufio.NewScanner(os.Stdin)
-
 	for {
 		fmt.Print(Prompt)
 		if !scanner.Scan() {
@@ -115,7 +106,6 @@ func (c *Client) ExecuteCommand(commandString string) (string, error) {
 	if err := c.writer.Flush(); err != nil {
 		return "", err
 	}
-
 	// Set read timeout
 	if err := c.conn.SetReadDeadline(time.Now().Add(3 * time.Second)); err != nil {
 		return "", err
@@ -149,7 +139,6 @@ func (c *Client) ExecuteCommand(commandString string) (string, error) {
 
 	// Clear read deadline
 	c.conn.SetReadDeadline(time.Time{})
-
 	return response.String(), nil
 }
 
