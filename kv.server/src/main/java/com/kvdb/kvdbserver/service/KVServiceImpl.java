@@ -1,7 +1,7 @@
 package com.kvdb.kvdbserver.service;
 
-import com.kvdb.kvcommon.proto.*;
 import com.kvdb.kvdbserver.repository.BaseRepository;
+import com.kvdb.proto.kvstore.*;
 import io.grpc.stub.StreamObserver;
 
 

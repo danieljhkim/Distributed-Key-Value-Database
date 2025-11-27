@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package kvdb.replication;
+
+option java_package = "com.kvdb.proto.replication";
+option java_multiple_files = true;
+
+
+// Replication RPC: leader -> follower
+service ReplicationService {
+  rpc Replicate (ReplicationRequest) returns (ReplicationResponse);
+}
+
+message ReplicationRequest {
+  string operation = 1; // "PUT" or "DELETE"
+  string key = 2;
+  string value = 3;     // for put
+  int64 sequence = 4;   // optional: for ordering
+}
+
+message ReplicationResponse {
+  bool success = 1;
+}

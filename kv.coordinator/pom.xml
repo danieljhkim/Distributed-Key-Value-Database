@@ -11,17 +11,16 @@
 
     <artifactId>kv.coordinator</artifactId>
 
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.kvdb</groupId>
             <artifactId>kv.common</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.kvdb</groupId>
+            <artifactId>kv.proto</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <!-- Include only what you need from parent dependencyManagement -->
         <dependency>

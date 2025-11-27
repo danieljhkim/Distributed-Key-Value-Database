@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-option java_multiple_files = true;
-option java_package = "com.kvdb.kvcommon.proto";
-option java_outer_classname = "KVStoreProto";
+package kvdb.kvstore;
 
-package kvstore;
+option java_package = "com.kvdb.proto.kvstore";
+option java_multiple_files = true;
+
 
 service KVService {
   rpc Get (KeyRequest) returns (ValueResponse);

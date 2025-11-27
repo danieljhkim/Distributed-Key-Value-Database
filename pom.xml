@@ -13,6 +13,7 @@
         <module>kv.coordinator</module>
         <module>kv.server</module>
         <module>kv.client</module>
+        <module>kv.proto</module>
     </modules>
 
     <properties>

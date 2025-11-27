@@ -1,6 +1,6 @@
 package com.kvdb.kvclustercoordinator.cluster;
 
-import com.kvdb.kvcommon.proto.*;
+import com.kvdb.proto.kvstore.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
